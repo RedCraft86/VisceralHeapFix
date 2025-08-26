@@ -18,6 +18,9 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.Overwrite;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(value = FleshTendonFeature.class, remap = false)
 public class FleshTendonMixin {
@@ -41,11 +44,14 @@ public class FleshTendonMixin {
         throw new AbstractMethodError("Shadow");
     }
 
-    @Overwrite
-    public boolean place(FeaturePlaceContext<NoneFeatureConfiguration> context) {
+    // m_142674_
+    @Inject(method = "place", at = @At("HEAD"), cancellable = true, remap = true)
+    private void onPlace(FeaturePlaceContext<NoneFeatureConfiguration> context, CallbackInfoReturnable<Boolean> cir) {
         RandomSource rand = context.random();
         if (rand.nextInt(100) >= CommonConfig.tendonChance) {
-            return false;
+            cir.setReturnValue(false);
+            cir.cancel();
+            return;
         }
 
         WorldGenLevel level = context.level();
@@ -53,7 +59,9 @@ public class FleshTendonMixin {
         final int MAX_Y = level.getMaxBuildHeight() - 1;
 
         if (!isFleshBlock(level, origin.below())) {
-            return false;
+            cir.setReturnValue(false);
+            cir.cancel();
+            return;
         }
 
         int xOff = rand.nextInt(CommonConfig.maxDistance * 2) - CommonConfig.maxDistance;
@@ -69,7 +77,9 @@ public class FleshTendonMixin {
 
         // Gap must be higher than 5 blocks to generate
         if (Math.abs(origin.getY() - endPos.getY()) < 5) {
-            return false;
+            cir.setReturnValue(false);
+            cir.cancel();
+            return;
         }
 
         BlockPos midPos = endPos.offset(0, Mth.floor(-(endPos.getY() - origin.getY()) * CommonConfig.midPosMulti), 0);
@@ -109,7 +119,9 @@ public class FleshTendonMixin {
 
         // We didn't generate at all!?
         if (lastPos == null) {
-            return false;
+            cir.setReturnValue(false);
+            cir.cancel();
+            return;
         }
 
         int iterations = 0;
@@ -134,7 +146,8 @@ public class FleshTendonMixin {
             thisObj.generateFleshBall(level, lastPos.below(), rand);
         }
 
-        return true;
+        cir.setReturnValue(true);
+        cir.cancel();
     }
 
     private boolean isFleshBlock(WorldGenLevel level, BlockPos pos) {
