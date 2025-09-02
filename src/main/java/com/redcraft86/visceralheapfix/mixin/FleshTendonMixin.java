@@ -50,7 +50,6 @@ public class FleshTendonMixin {
         RandomSource rand = context.random();
         if (rand.nextInt(100) >= CommonConfig.tendonChance) {
             cir.setReturnValue(false);
-            cir.cancel();
             return;
         }
 
@@ -60,7 +59,6 @@ public class FleshTendonMixin {
 
         if (!isFleshBlock(level, origin.below())) {
             cir.setReturnValue(false);
-            cir.cancel();
             return;
         }
 
@@ -78,7 +76,6 @@ public class FleshTendonMixin {
         // Gap must be higher than 5 blocks to generate
         if (Math.abs(origin.getY() - endPos.getY()) < 5) {
             cir.setReturnValue(false);
-            cir.cancel();
             return;
         }
 
@@ -120,7 +117,6 @@ public class FleshTendonMixin {
         // We didn't generate at all!?
         if (lastPos == null) {
             cir.setReturnValue(false);
-            cir.cancel();
             return;
         }
 
@@ -147,7 +143,6 @@ public class FleshTendonMixin {
         }
 
         cir.setReturnValue(true);
-        cir.cancel();
     }
 
     private boolean isFleshBlock(WorldGenLevel level, BlockPos pos) {
