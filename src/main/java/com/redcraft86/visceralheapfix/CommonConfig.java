@@ -1,8 +1,5 @@
 package com.redcraft86.visceralheapfix;
 
-import org.slf4j.Logger;
-import com.mojang.logging.LogUtils;
-
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.common.ForgeConfigSpec;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -10,8 +7,6 @@ import net.minecraftforge.fml.event.config.ModConfigEvent;
 
 @Mod.EventBusSubscriber(modid = ModClass.MOD_ID, bus = Mod.EventBusSubscriber.Bus.MOD)
 public class CommonConfig {
-    private static final Logger LOGGER = LogUtils.getLogger();
-
     private static final ForgeConfigSpec.IntValue MIN_DISTANCE;
     private static final ForgeConfigSpec.IntValue MAX_DISTANCE;
     private static final ForgeConfigSpec.DoubleValue MID_MULTI;
@@ -32,10 +27,10 @@ public class CommonConfig {
             .defineInRange("columnChance", 50, 10, 100);
 
         BALL_OFFSET_MIN = BUILDER.comment("Minimum distance since last one before spawning a flesh ball.")
-            .defineInRange("ballOffsetMin", 16, 1, 64);
+            .defineInRange("ballOffsetMin", 8, 1, 128);
 
         BALL_OFFSET_MAX = BUILDER.comment("Maximum distance since last one before spawning a flesh ball.")
-            .defineInRange("ballOffsetMax", 32, 1, 64);
+            .defineInRange("ballOffsetMax", 32, 1, 128);
 
         BUILDER.push("Generation");
 
@@ -85,7 +80,7 @@ public class CommonConfig {
                 ballOffsetMin = temp;
             } else if (ballOffsetMin == ballOffsetMax) {
                 // Ensure a gap otherwise rand.nextInt() will whine about it instead of assuming a constant
-                if (ballOffsetMax < 32) {
+                if (ballOffsetMax < 128) {
                     ballOffsetMax++;
                 } else {
                     ballOffsetMin--;

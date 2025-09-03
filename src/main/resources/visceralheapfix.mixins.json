@@ -3,6 +3,8 @@
   "package": "com.redcraft86.visceralheapfix.mixin",
   "compatibilityLevel": "JAVA_17",
   "refmap": "visceralheapfix.refmap.json",
-  "mixins": ["FleshTendonMixin"],
+  "mixins": [
+    "FleshTendonMixin"
+  ],
   "minVersion": "0.8"
 }

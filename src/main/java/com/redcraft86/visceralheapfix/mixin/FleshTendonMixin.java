@@ -5,7 +5,6 @@ import biomesoplenty.api.block.BOPBlocks;
 import biomesoplenty.worldgen.feature.misc.FleshTendonFeature;
 
 import com.redcraft86.visceralheapfix.CommonConfig;
-
 import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.WorldGenLevel;
@@ -17,7 +16,6 @@ import net.minecraft.core.BlockPos;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
-import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
@@ -122,7 +120,7 @@ public class FleshTendonMixin {
 
         int iterations = 0;
         lastPos = lastPos.above(); // Above last successful position, where potential air is
-        do {
+        while (level.isEmptyBlock(lastPos) && iterations < MAX_PILLAR_LIMIT) {
             if (!thisObj.setBlock(level, lastPos, getFleshBlock(rand))) {
                 // Something seriously do not want us going further, just give up.
                 break;
@@ -135,7 +133,7 @@ public class FleshTendonMixin {
 
             iterations++;
             lastPos = lastPos.above();
-        } while (level.isEmptyBlock(lastPos.above()) && iterations < MAX_PILLAR_LIMIT);
+        }
 
         // Cap it off with a ball if we can have one
         if (sinceLastBall > 4) {
@@ -145,17 +143,20 @@ public class FleshTendonMixin {
         cir.setReturnValue(true);
     }
 
+    @Unique
     private boolean isFleshBlock(WorldGenLevel level, BlockPos pos) {
         BlockState block = level.getBlockState(pos);
         return block.is(ModTags.Blocks.FLESH);
     }
 
+    @Unique
     private BlockState getFleshBlock(RandomSource rand) {
         return rand.nextInt(5) == 0
                 ? BOPBlocks.POROUS_FLESH.defaultBlockState()
                 : BOPBlocks.FLESH.defaultBlockState();
     }
 
+    @Unique
     private boolean tryPlaceBall(WorldGenLevel level, RandomSource rand, BlockPos pos) {
         if (sinceLastBall >= nextBallAt) {
             sinceLastBall = 0;
@@ -168,6 +169,7 @@ public class FleshTendonMixin {
         }
     }
 
+    @Unique
     private void tryPlaceColumn(WorldGenLevel level, RandomSource rand, BlockPos pos) {
         if (rand.nextInt(100) < CommonConfig.columnChance) {
             thisObj.placeFleshTendonColumn(level, rand, pos);
