@@ -27,10 +27,10 @@ public class CommonConfig {
             .defineInRange("columnChance", 50, 10, 100);
 
         BALL_OFFSET_MIN = BUILDER.comment("Minimum distance since last one before spawning a flesh ball.")
-            .defineInRange("ballOffsetMin", 8, 1, 128);
+            .defineInRange("ballOffsetMin", 16, 1, 128);
 
         BALL_OFFSET_MAX = BUILDER.comment("Maximum distance since last one before spawning a flesh ball.")
-            .defineInRange("ballOffsetMax", 32, 1, 128);
+            .defineInRange("ballOffsetMax", 64, 1, 128);
 
         BUILDER.push("Generation");
 
@@ -54,7 +54,7 @@ public class CommonConfig {
     public static int tendonChance = 75;
     public static int columnChance = 50;
     public static int ballOffsetMin = 16;
-    public static int ballOffsetMax = 32;
+    public static int ballOffsetMax = 64;
     public static int minDistance = 12;
     public static int maxDistance = 32;
     public static float midPosMulti = 0.7f;
