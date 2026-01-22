@@ -12,8 +12,8 @@ license="${mod_license}"
     authors="${mod_authors}"
     credits="${mod_credits}"
     description='''${mod_description}'''
-    displayURL="https://github.com/RedCraft86/${repo_name}"
-    issueTrackerURL="https://github.com/RedCraft86/${repo_name}/issues"
+    displayURL="https://github.com/${mod_authors}/${repo_name}"
+    issueTrackerURL="https://github.com/${mod_authors}/${repo_name}/issues"
     logoFile="${mod_id}_icon.png"
 
 [[dependencies.${mod_id}]]
