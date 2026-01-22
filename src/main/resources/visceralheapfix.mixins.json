@@ -3,7 +3,7 @@
   "package": "com.redcraft86.visceralheapfix.mixin",
   "compatibilityLevel": "JAVA_21",
   "mixins": [
-
+    "MixinFleshTendonFeature"
   ],
   "injectors": {
     "defaultRequire": 1
