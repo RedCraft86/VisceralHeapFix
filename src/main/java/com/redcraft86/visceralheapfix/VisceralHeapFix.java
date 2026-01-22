@@ -12,7 +12,7 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.bus.api.IEventBus;
 
 @Mod(VisceralHeapFix.MOD_ID)
-public class VisceralHeapFix {
+public final class VisceralHeapFix {
     public static final String MOD_ID = "visceralheapfix";
     public static final Logger LOGGER = LogUtils.getLogger();
 
