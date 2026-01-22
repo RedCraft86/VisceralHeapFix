@@ -62,7 +62,7 @@ neoForge {
 sourceSets.main.resources { srcDir 'src/generated/resources' }
 
 dependencies {
-    localRuntime "maven.modrinth:amplified-nether:1.2.13-neoforge"
+    implementation "maven.modrinth:amplified-nether:1.2.13-neoforge"
 
     implementation "maven.modrinth:glitchcore:2.1.0.0-neoforge"
     implementation "maven.modrinth:terrablender:4.1.0.8-neoforge"
