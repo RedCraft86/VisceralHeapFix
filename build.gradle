@@ -85,7 +85,7 @@ var generateModMetadata = tasks.register("generateModMetadata", ProcessResources
             repo_name                   : repo_name,
             mod_license                 : mod_license,
             mod_version                 : mod_version,
-            mod_authors                 : mod_authors,
+            mod_author                  : mod_author,
             mod_description             : mod_description,
             mod_credits                 : mod_credits
     ]
