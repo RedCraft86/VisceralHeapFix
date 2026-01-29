@@ -2,15 +2,18 @@ package com.redcraft86.visceralheapfix.mixin;
 
 import biomesoplenty.init.ModTags;
 import biomesoplenty.api.block.BOPBlocks;
+import biomesoplenty.util.SimpleBlockPredicate;
 import biomesoplenty.worldgen.feature.misc.FleshTendonFeature;
 
-import com.redcraft86.visceralheapfix.CommonConfig;
+import com.redcraft86.visceralheapfix.CommonCfg;
+
 import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.WorldGenLevel;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.feature.FeaturePlaceContext;
 import net.minecraft.world.level.levelgen.feature.configurations.NoneFeatureConfiguration;
+import net.minecraft.server.level.WorldGenRegion;
 import net.minecraft.core.BlockPos;
 
 import org.spongepowered.asm.mixin.Mixin;
@@ -22,157 +25,173 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(value = FleshTendonFeature.class, remap = false)
 public class FleshTendonMixin {
-    @Unique
-    private static final int MAX_FAIL_COUNT = 10;
+    @Unique private static final int MAX_PILLAR_LIMIT = 200;
 
-    @Unique
-    private static final int MAX_PILLAR_LIMIT = 250;
+    @Unique private final FleshTendonFeature thisObj = (FleshTendonFeature)(Object)this;
+    @Unique private int nextBallIn = 0;
 
-    @Unique
-    private int nextBallAt = 0;
+    @Shadow protected SimpleBlockPredicate replace;
 
-    @Unique
-    private int sinceLastBall = 0;
-
-    @Unique
-    private final FleshTendonFeature thisObj = (FleshTendonFeature)(Object)this;
-
-    @Shadow
-    private static BlockPos quadratic(float t, BlockPos v0, BlockPos v1, BlockPos v2) {
-        throw new AbstractMethodError("Shadow");
+    @Shadow private static BlockPos quadratic(float t, BlockPos v0, BlockPos v1, BlockPos v2) {
+        throw new RuntimeException("Shadowed method should be implemented in mixin target!");
     }
 
-    // m_142674_
-    @Inject(method = "place", at = @At("HEAD"), cancellable = true, remap = true)
-    private void onPlace(FeaturePlaceContext<NoneFeatureConfiguration> context, CallbackInfoReturnable<Boolean> cir) {
-        RandomSource rand = context.random();
-        if (rand.nextInt(100) >= CommonConfig.tendonChance) {
-            cir.setReturnValue(false);
-            return;
-        }
-
-        WorldGenLevel level = context.level();
-        BlockPos origin = context.origin();
-        final int MAX_Y = level.getMaxBuildHeight() - 1;
-
-        if (!isFleshBlock(level, origin.below())) {
-            cir.setReturnValue(false);
-            return;
-        }
-
-        int xOff = rand.nextInt(CommonConfig.maxDistance * 2) - CommonConfig.maxDistance;
-        int zOff = rand.nextInt(CommonConfig.maxDistance * 2) - CommonConfig.maxDistance;
-        int minX = rand.nextBoolean() ? CommonConfig.minDistance : -CommonConfig.minDistance;
-        int minZ = rand.nextBoolean() ? CommonConfig.minDistance : -CommonConfig.minDistance;
-        BlockPos endPos = origin.offset(Math.abs(xOff) < CommonConfig.minDistance ? minX : xOff,
-                origin.getY(), Math.abs(zOff) < CommonConfig.minDistance ? minZ : zOff);
-
-        while (level.isEmptyBlock(endPos) && endPos.getY() < MAX_Y) {
-            endPos = endPos.above(2);
-        }
-
-        // Gap must be higher than 5 blocks to generate
-        if (Math.abs(origin.getY() - endPos.getY()) < 5) {
-            cir.setReturnValue(false);
-            return;
-        }
-
-        BlockPos midPos = endPos.offset(0, Mth.floor(-(endPos.getY() - origin.getY()) * CommonConfig.midPosMulti), 0);
-
-        sinceLastBall = 0;
-        int failCount = 0;
-        BlockPos lastPos = null;
-        for (float d = 0.0f; d < 1.0f; d += CommonConfig.tendonStep) {
-            BlockPos curPos = quadratic(d, origin, midPos, endPos);
-            if (curPos.getY() >= MAX_Y) {
-                break;
-            }
-
-            // If we are already a flesh block, skip
-            // This is to make sure the flesh balls are properly spaced out
-            if (isFleshBlock(level, curPos)) {
-                continue;
-            }
-
-            thisObj.setBlock(level, curPos, getFleshBlock(rand));
-            if (level.isEmptyBlock(curPos)) {
-                // Means the tendon is cutting off. We generally don't care if it's blocked since we go through it.
-                // But we do care if it's stopping midair since it implies we're going out of the available bounds.
-                failCount++;
-                continue;
-            } else if (failCount >= MAX_FAIL_COUNT) {
-                break;
-            }
-
-            // Try to place glowing balls. Try columns if not.
-            if (!tryPlaceBall(level, rand, curPos)) {
-                tryPlaceColumn(level, rand, curPos.below());
-            }
-
-            lastPos = curPos;
-        }
-
-        // We didn't generate at all!?
-        if (lastPos == null) {
-            cir.setReturnValue(false);
-            return;
-        }
-
-        int iterations = 0;
-        lastPos = lastPos.above(); // Above last successful position, where potential air is
-        while (level.isEmptyBlock(lastPos) && iterations < MAX_PILLAR_LIMIT) {
-            if (!thisObj.setBlock(level, lastPos, getFleshBlock(rand))) {
-                // Something seriously do not want us going further, just give up.
-                break;
-            }
-
-            // This check is a duct tape solution but solves the issue of this being stopped due to the balls.
-            if (iterations > 4) {
-                tryPlaceBall(level, rand, lastPos.below(4));
-            }
-
-            iterations++;
-            lastPos = lastPos.above();
-        }
-
-        // Cap it off with a ball if we can have one
-        if (sinceLastBall > 4) {
-            thisObj.generateFleshBall(level, lastPos.below(), rand);
-        }
-
-        cir.setReturnValue(true);
+    @Shadow private boolean respectsCutoff(WorldGenRegion region, BlockPos pos) {
+        throw new RuntimeException("Shadowed method should be implemented in mixin target!");
     }
 
-    @Unique
-    private boolean isFleshBlock(WorldGenLevel level, BlockPos pos) {
-        BlockState block = level.getBlockState(pos);
-        return block.is(ModTags.Blocks.FLESH);
-    }
-
-    @Unique
-    private BlockState getFleshBlock(RandomSource rand) {
-        return rand.nextInt(5) == 0
+    @Unique private boolean tryPlaceBlock(WorldGenLevel level, RandomSource rand, BlockPos pos) {
+        return thisObj.setBlock(level, pos, rand.nextInt(5) == 0
                 ? BOPBlocks.POROUS_FLESH.defaultBlockState()
-                : BOPBlocks.FLESH.defaultBlockState();
+                : BOPBlocks.FLESH.defaultBlockState()
+        );
     }
 
-    @Unique
-    private boolean tryPlaceBall(WorldGenLevel level, RandomSource rand, BlockPos pos) {
-        if (sinceLastBall >= nextBallAt) {
-            sinceLastBall = 0;
-            nextBallAt = rand.nextInt(CommonConfig.ballOffsetMin, CommonConfig.ballOffsetMax);
+    @Unique private boolean tryPlaceColumn(WorldGenLevel level, RandomSource rand, BlockPos pos) {
+        if (rand.nextInt(100) < CommonCfg.COLUMN_CHANCE.get()) {
+            thisObj.placeFleshTendonColumn(level, rand, pos);
+            return true;
+        }
+        return false;
+    }
+
+    @Unique private boolean tryPlaceBall(WorldGenLevel level, RandomSource rand, BlockPos pos) {
+        if (nextBallIn <= 0) {
+            nextBallIn = rand.nextInt(CommonCfg.BALL_OFFSET_MIN.get(), CommonCfg.BALL_OFFSET_MAX.get());
             thisObj.generateFleshBall(level, pos, rand);
             return true;
         } else {
-            sinceLastBall++;
+            nextBallIn--;
             return false;
         }
     }
 
-    @Unique
-    private void tryPlaceColumn(WorldGenLevel level, RandomSource rand, BlockPos pos) {
-        if (rand.nextInt(100) < CommonConfig.columnChance) {
-            thisObj.placeFleshTendonColumn(level, rand, pos);
+    @Inject(method = "place", at = @At("HEAD"), cancellable = true, remap = true)
+    private void onPlace(FeaturePlaceContext<NoneFeatureConfiguration> context, CallbackInfoReturnable<Boolean> cir) {
+        final WorldGenLevel level = context.level();
+        final BlockPos startPos = context.origin();
+
+        final int BUILD_LIMIT = level.getMaxBuildHeight() - 1;
+        final int GEN_LIMIT = CommonCfg.MAX_HEIGHT_OFFSET.get() + (
+                CommonCfg.LIMIT_LOGICAL_HEIGHT.get() ? level.dimensionType().logicalHeight() : BUILD_LIMIT
+        );
+
+        // Don't generate if above the max gen height
+        if (startPos.getY() > GEN_LIMIT) {
+            cir.setReturnValue(false);
+            return;
         }
+
+        final RandomSource rand = context.random();
+
+        // Not to self: This is doing >= unlike tryPlaceColumn because in this case evaluating true means cancelling
+        if (rand.nextInt(100) >= CommonCfg.TENDON_CHANCE.get()) {
+            cir.setReturnValue(false);
+            return;
+        }
+
+        // Don't generate on irrelevant blocks
+        if (!level.getBlockState(startPos.below()).is(ModTags.Blocks.FLESH)) {
+            cir.setReturnValue(false);
+            return;
+        }
+
+        final int minDist = CommonCfg.MIN_DISTANCE.get(), maxDist = CommonCfg.MAX_DISTANCE.get();
+        final int minX = rand.nextBoolean() ? minDist : -minDist;
+        final int minZ = rand.nextBoolean() ? minDist : -minDist;
+        final int xOff = rand.nextInt(maxDist * 2) - maxDist;
+        final int zOff = rand.nextInt(maxDist * 2) - maxDist;
+
+        BlockPos endPos = startPos.offset(
+                Math.abs(xOff) < minDist ? minX : xOff,
+                startPos.getY(),
+                Math.abs(zOff) < maxDist ? minZ : zOff
+        );
+
+        // Figure out the Y for endPos
+        while (level.isEmptyBlock(endPos) && endPos.getY() < BUILD_LIMIT) {
+            endPos = endPos.above();
+        }
+
+        // Gap must be at least 5 blocks to generate
+        if (endPos.getY() - startPos.getY() < 5) {
+            cir.setReturnValue(false);
+            return;
+        }
+
+        BlockPos midPos = endPos.offset(0, Mth.floor(
+                (startPos.getY() - endPos.getY()) * CommonCfg.MID_MULTI.get()
+        ), 0);
+
+        int sinceLastBall = 0;
+        BlockPos lastPos = null;
+        for (float d = 0.0f; d < 1.0f; d += CommonCfg.STEP_RATE.get()) {
+            BlockPos curPos = quadratic(d, startPos, midPos, endPos);
+            if (curPos.getY() > GEN_LIMIT) {
+                break;
+            }
+
+            if (tryPlaceBlock(level, rand, curPos)) {
+                lastPos = curPos;
+                if (tryPlaceBall(level, rand, curPos)) {
+                    sinceLastBall = 0;
+                } else {
+                    tryPlaceColumn(level, rand, curPos.below());
+                    sinceLastBall++;
+                }
+            } else {
+                BlockState state = level.getBlockState(curPos);
+                if (!replace.test(level, curPos) && !state.is(ModTags.Blocks.FLESH)) {
+                    // If failing to place and target is not replaceable nor flesh, likely hit a ceiling
+                    lastPos = null;
+                    break;
+                }
+            }
+        }
+
+        // Forcefully cancelled or didn't spawn
+        if (lastPos == null) {
+            cir.setReturnValue(true);
+            return;
+        }
+
+        for (int i = 1; i < MAX_PILLAR_LIMIT; i++) {
+            BlockPos curPos = lastPos.above();
+            if (curPos.getY() > GEN_LIMIT) {
+                break;
+            }
+
+            if (tryPlaceBlock(level, rand, curPos)) {
+                lastPos = curPos;
+                if (tryPlaceBall(level, rand, curPos)) {
+                    sinceLastBall = 0;
+                } else {
+                    sinceLastBall++;
+                }
+            } else {
+                // Likely intersecting a ball so try and skip up to 5 blocks
+                for (int j = 1; j < 5 && !replace.test(level, curPos); j++) {
+                    curPos = curPos.above();
+                }
+
+                // There's a chance the loop will overshoot it... for some reason
+                BlockPos belowPos = curPos.below();
+                if (replace.test(level, belowPos)) {
+                    lastPos = belowPos;
+                } else if (replace.test(level, curPos)) {
+                    lastPos = curPos; // Loop didn't overshoot
+                } else {
+                    // If no replaceable space after skipping, it is likely a ceiling
+                    break;
+                }
+            }
+        }
+
+        // Cap it off with a ball if we can have one
+        if (sinceLastBall > 6) {
+            thisObj.generateFleshBall(level, lastPos, rand);
+        }
+
+        cir.setReturnValue(true);
     }
 }

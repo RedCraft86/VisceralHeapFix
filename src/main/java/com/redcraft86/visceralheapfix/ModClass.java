@@ -11,6 +11,6 @@ public class ModClass {
     public ModClass(FMLJavaModLoadingContext context)
     {
         MinecraftForge.EVENT_BUS.register(this);
-        context.registerConfig(ModConfig.Type.COMMON, CommonConfig.SPEC);
+        context.registerConfig(ModConfig.Type.COMMON, CommonCfg.SPEC);
     }
 }

@@ -1,1 +1,1 @@
-Attemps to fix Biomes O' Plenty's Visceral Heap tendons from becoming "dotted" and disconnecting with amplified nether heights.
+Attempts to fix Biomes O' Plenty's Visceral Heap tendons from becoming "dotted" and disconnecting with amplified nether heights.
