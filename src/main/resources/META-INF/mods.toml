@@ -2,9 +2,6 @@ modLoader="javafml"
 loaderVersion="${loader_version_range}"
 license="${mod_license}"
 
-[[accessTransformers]]
-    file="META-INF/accesstransformer.cfg"
-
 [[mixins]]
     config="${mod_id}.mixins.json"
 
@@ -33,13 +30,12 @@ license="${mod_license}"
     ordering="NONE"
     side="BOTH"
 
-# Some dependency
-#[[dependencies.${mod_id}]]
-#   modId="dependency_mod_id"
-#   mandatory=true
-#   versionRange="dependency_mod_version"
-#   ordering="AFTER" # Load the mod {NONE, BEFORE, AFTER} this dependency
-#   side="BOTH"
+[[dependencies.${mod_id}]]
+    modId="biomesoplenty"
+    mandatory=true
+    versionRange="[${biomesoplenty_version},)"
+    ordering="AFTER"
+    side="BOTH"
 
-[modproperties.${mod_id}] # NOTE, Catalogue uses logoFile above for banner, max height is 240
-catalogueImageIcon="${mod_id}_icon.png"
+[modproperties.${mod_id}]
+    catalogueImageIcon="${mod_id}_icon.png"
