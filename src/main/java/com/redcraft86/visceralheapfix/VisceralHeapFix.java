@@ -17,12 +17,6 @@ public final class VisceralHeapFix {
     public static final Logger LOGGER = LogUtils.getLogger();
 
     public VisceralHeapFix(IEventBus modEventBus, ModContainer modContainer) {
-        NeoForge.EVENT_BUS.register(this);
-
         modContainer.registerConfig(ModConfig.Type.COMMON, CommonCfg.SPEC);
-    }
-
-    @SubscribeEvent
-    public void onServerStarting(ServerStartingEvent event) {
     }
 }

@@ -22,7 +22,9 @@ public final class CommonCfg {
         TENDON_CHANCE = BUILDER.comment("Chance of tendons to spawn.")
                 .defineInRange("tendonChance", 75, 10, 100);
 
-        LIMIT_LOGICAL_HEIGHT = BUILDER.comment("Whether maximum spawnable Y should be limited to the logical height.")
+        LIMIT_LOGICAL_HEIGHT = BUILDER
+                .comment("Whether maximum spawnable Y should be limited to the logical height.")
+                .comment("If disabled, build height will be used, which may spawn tendons above the bedrock ceiling.")
                 .define("limitLogicalHeight", false);
 
         MAX_HEIGHT_OFFSET = BUILDER.comment("Offset to the maximum spawnable Y.")
